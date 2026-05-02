@@ -43,101 +43,127 @@ struct MainPanelView: View {
 
     var body: some View {
         ZStack {
+            // Main list layer
             VStack(spacing: 0) {
                 headerBar
                 searchBar
-                TagFilterBar(
-                    tags: allTags,
-                    selectedTag: $selectedTag
-                )
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
-
+                TagFilterBar(tags: allTags, selectedTag: $selectedTag)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
                 promptList
-
+                Divider()
                 bottomToolbar
             }
             .opacity(currentPage.isList ? 1 : 0)
+            .animation(.easeInOut(duration: 0.18), value: currentPage.isList)
 
-            if case .create = currentPage {
-                PromptFormView(prompt: nil) { currentPage = .list }
+            // Overlay pages with slide-up transition
+            Group {
+                if case .create = currentPage {
+                    PromptFormView(prompt: nil) { withAnimation(.easeInOut(duration: 0.2)) { currentPage = .list } }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                if case .edit(let prompt) = currentPage {
+                    PromptFormView(prompt: prompt) { withAnimation(.easeInOut(duration: 0.2)) { currentPage = .list } }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                if case .settings = currentPage {
+                    SettingsView { withAnimation(.easeInOut(duration: 0.2)) { currentPage = .list } }
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
             }
-            if case .edit(let prompt) = currentPage {
-                PromptFormView(prompt: prompt) { currentPage = .list }
-            }
-            if case .settings = currentPage {
-                SettingsView { currentPage = .list }
-            }
+            .animation(.easeInOut(duration: 0.2), value: currentPage.isList)
         }
         .frame(width: 420, height: 520)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
     private var headerBar: some View {
-        HStack {
+        HStack(spacing: 6) {
+            Image(systemName: "bubble.left.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.blue)
             Text("PromptBubble")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
-            Text("/")
-                .foregroundStyle(.quaternary)
-            Text("提示词管理")
-                .font(.system(size: 13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary.opacity(0.8))
             Spacer()
-            Button("关闭") {
+            Button {
                 NSApp.keyWindow?.orderOut(nil)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .symbolRenderingMode(.hierarchical)
             }
             .buttonStyle(.plain)
-            .font(.system(size: 12))
-            .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 4)
+        .padding(.top, 14)
+        .padding(.bottom, 6)
     }
 
     private var searchBar: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
+                .font(.system(size: 13))
             TextField("搜索提示词", text: $searchText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.tertiary)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .padding(10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 10)
         .padding(.vertical, 8)
+        .background(.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 
     private var promptList: some View {
         ScrollView {
-            LazyVStack(spacing: 8) {
+            LazyVStack(spacing: 6) {
                 if filteredPrompts.isEmpty {
                     emptyState
                 } else {
                     ForEach(filteredPrompts) { prompt in
                         PromptCardView(
                             prompt: prompt,
-                            onEdit: { currentPage = .edit(prompt) }
+                            onEdit: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    currentPage = .edit(prompt)
+                                }
+                            }
                         )
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
         }
         .frame(maxHeight: .infinity)
     }
 
     private var emptyState: some View {
         VStack(spacing: 12) {
-            Image(systemName: "bubble.left.and.text.bubble.right")
-                .font(.system(size: 36))
+            Image(systemName: searchText.isEmpty && selectedTag == nil
+                  ? "bubble.left.and.text.bubble.right"
+                  : "magnifyingglass")
+                .font(.system(size: 32))
                 .foregroundStyle(.tertiary)
+                .padding(.top, 40)
             Text(searchText.isEmpty && selectedTag == nil ? "还没有提示词" : "没有匹配的结果")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(.secondary)
             if searchText.isEmpty && selectedTag == nil {
-                Text("点击下方「+ 创建」添加你的第一条提示词")
+                Text("点击「+ 创建」添加第一条提示词")
                     .font(.system(size: 12))
                     .foregroundStyle(.tertiary)
             }
@@ -147,23 +173,34 @@ struct MainPanelView: View {
 
     private var bottomToolbar: some View {
         HStack {
-            Button(action: { currentPage = .create }) {
-                Label("创建", systemImage: "plus")
-                    .font(.system(size: 13, weight: .medium))
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { currentPage = .create }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("创建")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                .foregroundStyle(.blue)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.primary)
 
             Spacer()
 
-            Button(action: { currentPage = .settings }) {
-                Label("设置", systemImage: "gearshape")
-                    .font(.system(size: 13))
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { currentPage = .settings }
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
     }
 }

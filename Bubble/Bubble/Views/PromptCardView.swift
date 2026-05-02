@@ -9,66 +9,80 @@ struct PromptCardView: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            // Left color accent
             RoundedRectangle(cornerRadius: 2)
                 .fill(Color(hex: prompt.tagColor))
-                .frame(width: 4)
-                .padding(.vertical, 4)
+                .frame(width: 3)
+                .padding(.vertical, 10)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(prompt.title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .lineLimit(1)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(prompt.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
+                    if !prompt.tag.isEmpty {
+                        Text(prompt.tag)
+                            .font(.system(size: 10, weight: .medium))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(hex: prompt.tagColor).opacity(0.15), in: Capsule())
+                            .foregroundStyle(Color(hex: prompt.tagColor))
+                    }
+                }
 
                 Text(prompt.content)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+                    .multilineTextAlignment(.leading)
             }
-            .padding(.leading, 12)
-            .padding(.vertical, 8)
+            .padding(.leading, 10)
+            .padding(.vertical, 10)
 
             Spacer(minLength: 8)
 
-            if isHovered {
-                HStack(spacing: 4) {
-                    Button(action: onEdit) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 12))
-                            .frame(width: 28, height: 28)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 2) {
+                actionButton(systemName: "pencil", action: onEdit)
+                    .opacity(isHovered ? 1 : 0)
 
-                    Button(action: copyToClipboard) {
-                        Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
-                            .font(.system(size: 12))
-                            .frame(width: 28, height: 28)
-                            .contentShape(Rectangle())
-                            .foregroundStyle(showCopied ? .green : .secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.trailing, 8)
+                actionButton(
+                    systemName: showCopied ? "checkmark" : "doc.on.doc",
+                    tint: showCopied ? .green : nil,
+                    action: copyToClipboard
+                )
+                .opacity(isHovered ? 1 : 0)
             }
+            .padding(.trailing, 8)
+            .animation(.easeInOut(duration: 0.15), value: isHovered)
         }
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isHovered ? .white.opacity(0.1) : .white.opacity(0.05))
+                .fill(isHovered ? Color.primary.opacity(0.06) : Color.primary.opacity(0.03))
         )
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
+            withAnimation(.easeInOut(duration: 0.12)) {
                 isHovered = hovering
             }
         }
     }
 
+    private func actionButton(systemName: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 12))
+                .foregroundStyle(tint ?? Color.secondary)
+                .frame(width: 28, height: 28)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     private func copyToClipboard() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(prompt.content, forType: .string)
-        showCopied = true
+        withAnimation(.spring(duration: 0.2)) { showCopied = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            showCopied = false
+            withAnimation(.easeOut(duration: 0.2)) { showCopied = false }
         }
     }
 }

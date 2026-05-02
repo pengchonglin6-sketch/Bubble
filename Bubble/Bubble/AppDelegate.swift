@@ -12,6 +12,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupModelContainer()
         setupStatusItem()
         setupPanelController()
+        setupHotKey()
+        applyMenuBarVisibility()
         insertSampleDataIfNeeded()
     }
 
@@ -66,7 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         openItem.target = self
         menu.addItem(openItem)
 
-        let shortcutItem = NSMenuItem(title: "快捷键: ⌘⇧Space", action: nil, keyEquivalent: "")
+        let shortcutItem = NSMenuItem(title: "快捷键: \(HotKeyManager.shared.currentDisplayString)", action: nil, keyEquivalent: "")
         shortcutItem.isEnabled = false
         menu.addItem(shortcutItem)
 
@@ -84,6 +86,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !panelController.isVisible {
             togglePanel()
         }
+    }
+
+    private func setupHotKey() {
+        HotKeyManager.shared.onActivate = { [weak self] in
+            DispatchQueue.main.async { self?.togglePanel() }
+        }
+        HotKeyManager.shared.loadSavedOrDefault()
+    }
+
+    private func applyMenuBarVisibility() {
+        statusItem.isVisible = SettingsManager.shared.showMenuBarIcon
+    }
+
+    func setMenuBarVisible(_ visible: Bool) {
+        statusItem.isVisible = visible
     }
 
     private func insertSampleDataIfNeeded() {

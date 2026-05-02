@@ -3,7 +3,13 @@
     "allow": [
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(xcode-select -p)",
+      "Bash(brew install *)",
+      "Bash(xcodegen --version)",
+      "Bash(xcodegen generate *)",
+      "Bash(xcodebuild -project Bubble.xcodeproj -scheme Bubble -destination 'platform=macOS' build)",
+      "Bash(xcodebuild -project Bubble.xcodeproj -scheme BubbleTests -destination 'platform=macOS' test)"
     ]
   }
 }

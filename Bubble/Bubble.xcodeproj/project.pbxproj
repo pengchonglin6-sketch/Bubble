@@ -12,7 +12,9 @@
 		280BFBB48D2EC57A67614BEF /* BubbleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B12D2A976C53EEB139FC50 /* BubbleApp.swift */; };
 		31A0155859B86E6C32DC2D71 /* Prompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0125041D6D7456D8D7F93AC9 /* Prompt.swift */; };
 		4381058B30DFC1B78B9537B4 /* PromptModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09299D35C005CF924EE52989 /* PromptModelTests.swift */; };
+		46E7849B6B5538744851172D /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D791DAC6C1F981EFE52E2EBA /* SettingsManager.swift */; };
 		500F83671A2ED73A3C38D9CA /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = CEA127CF312912B9ABF27122 /* HotKey */; };
+		6F614BD2171D057751A21CF1 /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B7AB2780AF681F7B11FA0D /* HotKeyManager.swift */; };
 		9668D629CF98C002668DCDAF /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 091B3980C77B0B8BC536A756 /* SettingsView.swift */; };
 		A6EAD97BD99E9786D1C73BBA /* TagFilterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6CE5C46DDAAD510B7970EF /* TagFilterBar.swift */; };
 		B2D3C97C8104342E1B21E0FF /* PromptFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F09AF0417F9CE809DF298AA /* PromptFormView.swift */; };
@@ -39,6 +41,7 @@
 		106E25D023D63E8571E5D893 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		147E3B38023E478FE0F56E82 /* PromptCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptCardView.swift; sourceTree = "<group>"; };
 		1F5711BEF04A102BB3BFB382 /* BubbleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BubbleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		38B7AB2780AF681F7B11FA0D /* HotKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyManager.swift; sourceTree = "<group>"; };
 		3F09AF0417F9CE809DF298AA /* PromptFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptFormView.swift; sourceTree = "<group>"; };
 		51B12D2A976C53EEB139FC50 /* BubbleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleApp.swift; sourceTree = "<group>"; };
 		53F2560D5459524FF26ABC7F /* MainPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelView.swift; sourceTree = "<group>"; };
@@ -46,6 +49,7 @@
 		8A6CE5C46DDAAD510B7970EF /* TagFilterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterBar.swift; sourceTree = "<group>"; };
 		9CE4E9FD1D7B0F5D05DF237F /* Bubble.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Bubble.entitlements; sourceTree = "<group>"; };
 		BB94751122DA9ADC81F89EE3 /* Bubble.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bubble.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D791DAC6C1F981EFE52E2EBA /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		E9538ACC36EE63DE8950C9E1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -84,6 +88,8 @@
 		3CEC79AEE84D81447B66E410 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				38B7AB2780AF681F7B11FA0D /* HotKeyManager.swift */,
+				D791DAC6C1F981EFE52E2EBA /* SettingsManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -247,11 +253,13 @@
 			files = (
 				F587E23F3BAEA3E8109DF7A8 /* AppDelegate.swift in Sources */,
 				280BFBB48D2EC57A67614BEF /* BubbleApp.swift in Sources */,
+				6F614BD2171D057751A21CF1 /* HotKeyManager.swift in Sources */,
 				E2D80D6CA6A151FAC7DD56DE /* MainPanelView.swift in Sources */,
 				0DA9560C20B6227D40C8DB09 /* PanelController.swift in Sources */,
 				31A0155859B86E6C32DC2D71 /* Prompt.swift in Sources */,
 				1E1464126E202C126C8F79CB /* PromptCardView.swift in Sources */,
 				B2D3C97C8104342E1B21E0FF /* PromptFormView.swift in Sources */,
+				46E7849B6B5538744851172D /* SettingsManager.swift in Sources */,
 				9668D629CF98C002668DCDAF /* SettingsView.swift in Sources */,
 				A6EAD97BD99E9786D1C73BBA /* TagFilterBar.swift in Sources */,
 			);
