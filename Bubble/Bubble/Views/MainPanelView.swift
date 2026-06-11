@@ -88,7 +88,7 @@ struct MainPanelView: View {
                 .foregroundStyle(.primary.opacity(0.8))
             Spacer()
             Button {
-                NSApp.keyWindow?.orderOut(nil)
+                NSApp.keyWindow?.close()
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 14))

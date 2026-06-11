@@ -18,10 +18,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupModelContainer() {
+        // 必须显式指定专属路径：非沙盒应用的 SwiftData 默认存储是共享的
+        // ~/Library/Application Support/default.store，会被系统进程
+        // （如 icloudmailagent）的 schema 迁移破坏，导致数据全部丢失。
+        let storeDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Bubble", isDirectory: true)
+        let storeURL = storeDirectory.appendingPathComponent("Bubble.store")
+
         do {
-            modelContainer = try ModelContainer(for: Prompt.self)
+            try FileManager.default.createDirectory(at: storeDirectory, withIntermediateDirectories: true)
+            let configuration = ModelConfiguration(url: storeURL)
+            modelContainer = try ModelContainer(for: Prompt.self, configurations: configuration)
         } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+            let alert = NSAlert()
+            alert.alertStyle = .critical
+            alert.messageText = "无法打开提示词数据库"
+            alert.informativeText = "数据库初始化失败：\(error.localizedDescription)\n\n数据文件位于：\(storeURL.path)\n你可以备份后删除该文件再重新启动应用。"
+            alert.addButton(withTitle: "退出")
+            alert.runModal()
+            NSApp.terminate(nil)
         }
     }
 
@@ -104,6 +119,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func insertSampleDataIfNeeded() {
+        // 用标志位而非 count==0 判断首次启动，
+        // 否则用户删光所有提示词后示例数据会在下次启动时"复活"
+        let sampleDataKey = "hasInsertedSampleData"
+        guard !UserDefaults.standard.bool(forKey: sampleDataKey) else { return }
+        UserDefaults.standard.set(true, forKey: sampleDataKey)
+
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<Prompt>()
         let count = (try? context.fetchCount(descriptor)) ?? 0

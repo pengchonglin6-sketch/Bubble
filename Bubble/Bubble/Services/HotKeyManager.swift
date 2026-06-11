@@ -21,10 +21,16 @@ final class HotKeyManager {
     }
 
     func loadSavedOrDefault() {
+        // 不能用 keyCode != 0 判断"是否保存过"：Carbon 键码 0 是字母 A 键
+        guard UserDefaults.standard.object(forKey: "hotKeyCarbonCode") != nil else {
+            registerDefault()
+            return
+        }
+
         let keyCode = UserDefaults.standard.integer(forKey: "hotKeyCarbonCode")
         let modifiers = UserDefaults.standard.integer(forKey: "hotKeyCarbonModifiers")
 
-        if keyCode != 0, let key = Key(carbonKeyCode: UInt32(keyCode)) {
+        if let key = Key(carbonKeyCode: UInt32(keyCode)) {
             let flags = NSEvent.ModifierFlags(carbonFlags: UInt32(modifiers))
             register(key: key, modifiers: flags)
         } else {

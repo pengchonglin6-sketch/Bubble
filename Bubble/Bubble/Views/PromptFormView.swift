@@ -11,6 +11,7 @@ struct PromptFormView: View {
     @State private var selectedTag: String = ""
     @State private var selectedColor: String = "#4A90D9"
     @State private var showDeleteConfirm = false
+    @State private var saveErrorMessage: String? = nil
 
     private let maxContentLength = 2000
 
@@ -24,7 +25,9 @@ struct PromptFormView: View {
     ]
 
     private var isEditing: Bool { prompt != nil }
-    private var canSave: Bool { !title.isEmpty && !content.isEmpty }
+    private var canSave: Bool {
+        !title.isEmpty && !content.isEmpty && content.count <= maxContentLength
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -66,11 +69,8 @@ struct PromptFormView: View {
                             .padding(8)
                             .frame(minHeight: 120)
                             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-                            .onChange(of: content) { _, newValue in
-                                if newValue.count > maxContentLength {
-                                    content = String(newValue.prefix(maxContentLength))
-                                }
-                            }
+                            // 不在 onChange 里硬截断：中文输入法组字阶段（marked text）
+                            // 字符数会临时超限，截断会打断输入法。改为超限时禁用保存按钮。
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -120,7 +120,9 @@ struct PromptFormView: View {
                                 selectedTag = newValue
                                 if !newValue.isEmpty {
                                     let colors = ["#4A90D9", "#50B83C", "#E8913A", "#DE3D82", "#9C6ADE", "#EEC200", "#E74C3C", "#95A5A6"]
-                                    selectedColor = colors[abs(newValue.hashValue) % colors.count]
+                                    // 不能用 hashValue：它每次启动随机化种子，同一标签的颜色会变
+                                    let stableHash = newValue.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0x7FFFFFFF }
+                                    selectedColor = colors[stableHash % colors.count]
                                 }
                             }
                         ))
@@ -167,6 +169,14 @@ struct PromptFormView: View {
                 selectedColor = prompt.tagColor
             }
         }
+        .alert("保存失败", isPresented: Binding(
+            get: { saveErrorMessage != nil },
+            set: { if !$0 { saveErrorMessage = nil } }
+        )) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage ?? "")
+        }
         .alert("确认删除", isPresented: $showDeleteConfirm) {
             Button("取消", role: .cancel) {}
             Button("删除", role: .destructive) { deleteAndDismiss() }
@@ -187,19 +197,34 @@ struct PromptFormView: View {
                 title: title,
                 content: content,
                 tag: selectedTag,
-                tagColor: selectedColor
+                tagColor: selectedColor,
+                sortOrder: nextSortOrder()
             )
             modelContext.insert(newPrompt)
         }
-        try? modelContext.save()
-        onDismiss()
+        commitAndDismiss()
+    }
+
+    private func nextSortOrder() -> Int {
+        var descriptor = FetchDescriptor<Prompt>(sortBy: [SortDescriptor(\.sortOrder, order: .reverse)])
+        descriptor.fetchLimit = 1
+        let maxOrder = (try? modelContext.fetch(descriptor))?.first?.sortOrder ?? -1
+        return maxOrder + 1
     }
 
     private func deleteAndDismiss() {
         if let prompt {
             modelContext.delete(prompt)
-            try? modelContext.save()
         }
-        onDismiss()
+        commitAndDismiss()
+    }
+
+    private func commitAndDismiss() {
+        do {
+            try modelContext.save()
+            onDismiss()
+        } catch {
+            saveErrorMessage = error.localizedDescription
+        }
     }
 }

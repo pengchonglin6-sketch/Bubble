@@ -18,10 +18,11 @@ final class FloatingPanel: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true
-        hidesOnDeactivate = true
+        hidesOnDeactivate = false
         isMovableByWindowBackground = false
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
+        animationBehavior = .utilityWindow
 
         let visualEffect = NSVisualEffectView(frame: contentRect)
         visualEffect.material = .hudWindow
@@ -38,6 +39,7 @@ final class FloatingPanel: NSPanel {
 final class PanelController {
     private let panel: FloatingPanel
     private let hostingView: NSHostingView<AnyView>
+    private var clickMonitor: Any?
 
     static let panelWidth: CGFloat = 420
     static let panelHeight: CGFloat = 520
@@ -68,21 +70,35 @@ final class PanelController {
     }
 
     func show(relativeTo statusItemFrame: NSRect) {
-        let panelX = statusItemFrame.midX - Self.panelWidth / 2
-        let panelY = statusItemFrame.minY - Self.panelHeight - 4
+        let screenFrame = NSScreen.main?.visibleFrame ?? .zero
+
+        var panelX = statusItemFrame.midX - Self.panelWidth / 2
+        var panelY = statusItemFrame.minY - Self.panelHeight - 4
+
+        if statusItemFrame == .zero {
+            panelX = screenFrame.midX - Self.panelWidth / 2
+            panelY = screenFrame.maxY - Self.panelHeight - 40
+        }
+
+        panelX = max(screenFrame.minX + 8, min(panelX, screenFrame.maxX - Self.panelWidth - 8))
 
         let origin = NSPoint(x: panelX, y: panelY)
         panel.setFrameOrigin(origin)
+        panel.alphaValue = 0
         panel.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.15
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().alphaValue = 1.0
         }
+
+        startClickMonitor()
     }
 
     func close() {
+        stopClickMonitor()
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.1
             panel.animator().alphaValue = 0.0
@@ -90,5 +106,20 @@ final class PanelController {
             self.panel.orderOut(nil)
             self.panel.alphaValue = 1.0
         })
+    }
+
+    private func startClickMonitor() {
+        stopClickMonitor()
+        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            guard let self, self.panel.isVisible else { return }
+            self.close()
+        }
+    }
+
+    private func stopClickMonitor() {
+        if let clickMonitor {
+            NSEvent.removeMonitor(clickMonitor)
+            self.clickMonitor = nil
+        }
     }
 }
