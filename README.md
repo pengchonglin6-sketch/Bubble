@@ -14,6 +14,12 @@ Bubble 是一款 macOS 菜单栏应用。点击状态栏图标或按下全局快
 
 **核心理念：** 不打断当前工作流，随取随用，用完即走。
 
+<p align="center">
+  <img src="assets/preview-panel.png" width="46%" alt="主面板 — 搜索、标签筛选、一键复制" />
+  &nbsp;&nbsp;
+  <img src="assets/preview-form.png" width="46%" alt="新建提示词 — 标题、内容、自定义标签" />
+</p>
+
 ---
 
 ## 功能特性
