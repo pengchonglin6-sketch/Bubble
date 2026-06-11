@@ -19,7 +19,9 @@ struct MainPanelView: View {
 
     @State private var searchText = ""
     @State private var selectedTag: String? = nil
-    @State private var currentPage: PanelPage = .list
+    // 调试/截图用：--page=create 直接打开新建表单
+    @State private var currentPage: PanelPage =
+        CommandLine.arguments.contains("--page=create") ? .create : .list
 
     private var filteredPrompts: [Prompt] {
         prompts.filter { prompt in

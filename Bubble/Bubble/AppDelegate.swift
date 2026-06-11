@@ -15,6 +15,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupHotKey()
         applyMenuBarVisibility()
         insertSampleDataIfNeeded()
+
+        // 调试/截图用：open Bubble.app --args --show-panel
+        if CommandLine.arguments.contains("--show-panel") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.togglePanel()
+            }
+        }
     }
 
     private func setupModelContainer() {
