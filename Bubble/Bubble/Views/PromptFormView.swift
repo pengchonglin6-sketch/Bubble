@@ -25,6 +25,16 @@ struct PromptFormView: View {
     ]
 
     private var isEditing: Bool { prompt != nil }
+
+    // 磨砂深色面板上 .ultraThinMaterial 几乎不可见，输入区域需要明确的底色+描边
+    private func inputBackground(cornerRadius: CGFloat = 8) -> some View {
+        RoundedRectangle(cornerRadius: cornerRadius)
+            .fill(Color.primary.opacity(0.06))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(Color.primary.opacity(0.14), lineWidth: 1)
+            )
+    }
     private var canSave: Bool {
         !title.isEmpty && !content.isEmpty && content.count <= maxContentLength
     }
@@ -50,7 +60,7 @@ struct PromptFormView: View {
                             .textFieldStyle(.plain)
                             .font(.system(size: 14))
                             .padding(10)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                            .background(inputBackground())
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -68,7 +78,7 @@ struct PromptFormView: View {
                             .scrollContentBackground(.hidden)
                             .padding(8)
                             .frame(minHeight: 120)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                            .background(inputBackground())
                             // 不在 onChange 里硬截断：中文输入法组字阶段（marked text）
                             // 字符数会临时超限，截断会打断输入法。改为超限时禁用保存按钮。
                     }
@@ -129,7 +139,7 @@ struct PromptFormView: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 13))
                         .padding(8)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        .background(inputBackground())
                     }
                 }
                 .padding(.horizontal, 16)

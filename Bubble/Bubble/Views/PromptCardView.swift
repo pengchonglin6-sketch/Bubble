@@ -1,11 +1,14 @@
 import SwiftUI
+import SwiftData
 
 struct PromptCardView: View {
     let prompt: Prompt
     var onEdit: () -> Void
 
+    @Environment(\.modelContext) private var modelContext
     @State private var showCopied = false
     @State private var isHovered = false
+    @State private var showDeleteConfirm = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -42,16 +45,21 @@ struct PromptCardView: View {
             Spacer(minLength: 8)
 
             HStack(spacing: 2) {
-                actionButton(systemName: "pencil", action: onEdit)
-                    .opacity(isHovered ? 1 : 0)
+                actionButton(systemName: "square.and.pencil", action: onEdit)
 
                 actionButton(
                     systemName: showCopied ? "checkmark" : "doc.on.doc",
                     tint: showCopied ? .green : nil,
                     action: copyToClipboard
                 )
-                .opacity(isHovered ? 1 : 0)
+
+                actionButton(
+                    systemName: "trash",
+                    tint: .red.opacity(0.85),
+                    action: { showDeleteConfirm = true }
+                )
             }
+            .opacity(isHovered ? 1 : 0)
             .padding(.trailing, 8)
             .animation(.easeInOut(duration: 0.15), value: isHovered)
         }
@@ -64,12 +72,25 @@ struct PromptCardView: View {
                 isHovered = hovering
             }
         }
+        .alert("删除「\(prompt.title)」？", isPresented: $showDeleteConfirm) {
+            Button("取消", role: .cancel) {}
+            Button("删除", role: .destructive) { deletePrompt() }
+        } message: {
+            Text("删除后无法恢复。")
+        }
+    }
+
+    private func deletePrompt() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            modelContext.delete(prompt)
+        }
+        try? modelContext.save()
     }
 
     private func actionButton(systemName: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 12))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(tint ?? Color.secondary)
                 .frame(width: 28, height: 28)
                 .contentShape(Rectangle())
