@@ -4,7 +4,7 @@
 
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey?logo=apple)
 ![Swift](https://img.shields.io/badge/swift-5.9-orange?logo=swift)
-![License](https://img.shields.io/badge/license-Personal%20Use-blue)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 ---
 
@@ -37,7 +37,19 @@ Bubble 是一款 macOS 菜单栏应用。点击状态栏图标或按下全局快
 
 ---
 
-## 从源码编译运行
+## 安装
+
+### 方式一：下载现成应用
+
+1. 前往 [Releases](https://github.com/pengchonglin6-sketch/Bubble/releases) 下载最新的 `Bubble.app.zip`
+2. 解压后把 `Bubble.app` 拖入「应用程序」文件夹
+3. **首次打开**：应用未经 Apple 公证，直接双击会被拦截。请**右键点击 Bubble.app → 打开 → 再点「打开」**；或在终端执行：
+
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/Bubble.app
+   ```
+
+### 方式二：从源码编译
 
 ```bash
 # 1. 克隆仓库
@@ -45,12 +57,12 @@ git clone https://github.com/pengchonglin6-sketch/Bubble.git
 cd Bubble
 
 # 2. 用 Xcode 打开
-open Bubble.xcodeproj
+open Bubble/Bubble.xcodeproj
 
 # 3. Cmd+B 编译，Cmd+R 运行
 ```
 
-首次运行时系统会申请**辅助功能**权限（全局快捷键必需）：  
+首次运行时系统会申请**辅助功能**权限（全局快捷键必需）：
 `系统设置 → 隐私与安全性 → 辅助功能 → 打开 Bubble 开关`
 
 ---
@@ -103,14 +115,17 @@ open Bubble.xcodeproj
 
 ## 故障排查
 
-**全局快捷键无响应**  
+**全局快捷键无响应**
 → 前往 `系统设置 → 隐私与安全性 → 辅助功能`，确认 Bubble 已打开
 
-**修改快捷键后未生效**  
+**修改快捷键后未生效**
 → 新快捷键与其他应用冲突，在设置中查看提示并更换组合键
 
-**开机启动未工作**  
+**开机启动未工作**
 → 在设置中关闭再重新开启"开机自启动"
+
+**提示"无法打开，因为来自身份不明的开发者"**
+→ 见上方「安装 · 方式一」第 3 步
 
 ---
 
@@ -127,6 +142,19 @@ open Bubble.xcodeproj
 
 ---
 
+## 项目结构
+
+```
+Bubble/              # Xcode 项目
+├── Bubble.xcodeproj
+├── Bubble/          # 源码（App 入口 / Models / Views / Services / Helpers）
+├── BubbleTests/     # 单元测试
+└── tasks/           # 开发计划文档
+UI/                  # 设计原型图
+```
+
+---
+
 ## License
 
-Personal use. All rights reserved.
+[MIT](LICENSE)
