@@ -4,6 +4,7 @@ import SwiftData
 struct PromptCardView: View {
     let prompt: Prompt
     var onEdit: () -> Void
+    var onCopyCompleted: () -> Void
 
     @Environment(\.modelContext) private var modelContext
     @State private var showCopied = false
@@ -100,8 +101,9 @@ struct PromptCardView: View {
 
     private func copyToClipboard() {
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(prompt.content, forType: .string)
+        guard NSPasteboard.general.setString(prompt.content, forType: .string) else { return }
         withAnimation(.spring(duration: 0.2)) { showCopied = true }
+        onCopyCompleted()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             withAnimation(.easeOut(duration: 0.2)) { showCopied = false }
         }

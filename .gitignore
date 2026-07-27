@@ -4,3 +4,7 @@
 # Claude Code local settings
 .claude/
 **/.claude/
+
+# Local build and distribution outputs
+.build/
+dist/
