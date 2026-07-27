@@ -45,6 +45,26 @@ Bubble 是一款 macOS 菜单栏应用。点击状态栏图标或按下全局快
 
 ## 安装
 
+### 一键安装到另一台 Mac
+
+项目根目录提供了两个可以直接双击的工具：
+
+- `一键制作免开发环境安装包.command`：在装有完整 Xcode 的 Mac 上编译项目，并在 `dist` 文件夹生成 `Bubble-安装包.zip`
+- `一键安装.command`：自动寻找 `Bubble.app`；有现成应用时直接安装，只有源码时自动调用 Xcode 编译后安装
+
+推荐流程：
+
+1. 在当前电脑安装完整 Xcode，并至少打开一次完成初始化
+2. 双击项目根目录的 `一键制作免开发环境安装包.command`
+3. 等待 Finder 自动选中 `dist/Bubble-安装包.zip`
+4. 把这个 ZIP 通过 U 盘、局域网或 AirDrop 复制到另一台 Mac
+5. 另一台 Mac 解压后，双击 `安装 Bubble.command`
+6. 安装完成后，在 `系统设置 → 隐私与安全性 → 辅助功能` 中开启 Bubble
+
+另一台电脑只需要 macOS 14 或更高版本，**不需要 Agent、Codex、Claude 或 Xcode**。
+
+如果 macOS 阻止 `.command` 文件运行，请按住 Control 点击该文件，选择“打开”，然后再次确认“打开”。
+
 ### 方式一：下载现成应用
 
 1. 前往 [Releases](https://github.com/pengchonglin6-sketch/Bubble/releases) 下载最新的 `Bubble.app.zip`

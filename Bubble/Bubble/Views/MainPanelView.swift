@@ -14,6 +14,8 @@ enum PanelPage {
 }
 
 struct MainPanelView: View {
+    var onRequestClose: () -> Void
+
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Prompt.sortOrder) private var prompts: [Prompt]
 
@@ -90,7 +92,7 @@ struct MainPanelView: View {
                 .foregroundStyle(.primary.opacity(0.8))
             Spacer()
             Button {
-                NSApp.keyWindow?.close()
+                onRequestClose()
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 14))
@@ -142,7 +144,8 @@ struct MainPanelView: View {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     currentPage = .edit(prompt)
                                 }
-                            }
+                            },
+                            onCopyCompleted: onRequestClose
                         )
                     }
                 }
