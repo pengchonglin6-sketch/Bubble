@@ -58,7 +58,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupPanelController() {
-        let contentView = MainPanelView()
+        let contentView = MainPanelView { [weak self] in
+            self?.panelController?.close()
+        }
             .modelContainer(modelContainer)
         panelController = PanelController(contentView: contentView)
     }

@@ -15,6 +15,7 @@ final class FloatingPanel: NSPanel {
 
         isFloatingPanel = true
         level = .popUpMenu
+        // 圆角窗口本身仍需透明边缘，但内容区域使用固定实色，不再采样后方窗口。
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true
@@ -24,15 +25,18 @@ final class FloatingPanel: NSPanel {
         titlebarAppearsTransparent = true
         animationBehavior = .utilityWindow
 
-        let visualEffect = NSVisualEffectView(frame: contentRect)
-        visualEffect.material = .hudWindow
-        visualEffect.state = .active
-        visualEffect.blendingMode = .behindWindow
-        visualEffect.wantsLayer = true
-        visualEffect.layer?.cornerRadius = 16
-        visualEffect.layer?.masksToBounds = true
+        let solidContainer = NSView(frame: contentRect)
+        solidContainer.wantsLayer = true
+        solidContainer.layer?.backgroundColor = NSColor(
+            red: 0.93,
+            green: 0.94,
+            blue: 0.96,
+            alpha: 1
+        ).cgColor
+        solidContainer.layer?.cornerRadius = 16
+        solidContainer.layer?.masksToBounds = true
 
-        contentView = visualEffect
+        contentView = solidContainer
     }
 }
 

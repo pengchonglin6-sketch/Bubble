@@ -170,7 +170,7 @@ struct PromptFormView: View {
             .padding(.vertical, 12)
         }
         .frame(width: 420, height: 520)
-        .background(.ultraThickMaterial)
+        .background(Color.clear)
         .onAppear {
             if let prompt {
                 title = prompt.title
