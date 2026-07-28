@@ -28,7 +28,7 @@ struct SettingsView: View {
             versionFooter
         }
         .frame(width: 420, height: 520)
-        .background(.ultraThickMaterial)
+        .background(Color.clear)
     }
 
     private var headerBar: some View {

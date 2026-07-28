@@ -4,9 +4,12 @@ import SwiftData
 struct PromptCardView: View {
     let prompt: Prompt
     var onEdit: () -> Void
+    var onCopyComplete: () -> Void
 
     @Environment(\.modelContext) private var modelContext
     @State private var showCopied = false
+    @State private var isCopyAnimating = false
+    @State private var isCopyPendingClose = false
     @State private var isHovered = false
     @State private var showDeleteConfirm = false
 
@@ -50,6 +53,7 @@ struct PromptCardView: View {
                 actionButton(
                     systemName: showCopied ? "checkmark" : "doc.on.doc",
                     tint: showCopied ? .green : nil,
+                    scale: isCopyAnimating ? 0.78 : 1,
                     action: copyToClipboard
                 )
 
@@ -67,6 +71,8 @@ struct PromptCardView: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(isHovered ? Color.primary.opacity(0.06) : Color.primary.opacity(0.03))
         )
+        .scaleEffect(isCopyAnimating ? 0.992 : 1)
+        .animation(.spring(response: 0.22, dampingFraction: 0.58), value: isCopyAnimating)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.12)) {
                 isHovered = hovering
@@ -87,23 +93,49 @@ struct PromptCardView: View {
         try? modelContext.save()
     }
 
-    private func actionButton(systemName: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
+    private func actionButton(
+        systemName: String,
+        tint: Color? = nil,
+        scale: CGFloat = 1,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(tint ?? Color.secondary)
+                .scaleEffect(scale)
                 .frame(width: 28, height: 28)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .animation(.spring(response: 0.2, dampingFraction: 0.52), value: scale)
     }
 
     private func copyToClipboard() {
+        guard !isCopyPendingClose else { return }
+        isCopyPendingClose = true
+
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(prompt.content, forType: .string)
-        withAnimation(.spring(duration: 0.2)) { showCopied = true }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            withAnimation(.easeOut(duration: 0.2)) { showCopied = false }
+
+        withAnimation(.spring(response: 0.18, dampingFraction: 0.55)) {
+            isCopyAnimating = true
+            showCopied = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.58)) {
+                isCopyAnimating = false
+            }
+        }
+
+        // 留出足够时间让用户看到按压和成功对勾，再收起整个面板。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
+            onCopyComplete()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                showCopied = false
+                isCopyPendingClose = false
+            }
         }
     }
 }

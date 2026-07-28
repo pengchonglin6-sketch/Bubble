@@ -16,6 +16,7 @@ enum PanelPage {
 struct MainPanelView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Prompt.sortOrder) private var prompts: [Prompt]
+    let onRequestClose: () -> Void
 
     @State private var searchText = ""
     @State private var selectedTag: String? = nil
@@ -77,7 +78,13 @@ struct MainPanelView: View {
             .animation(.easeInOut(duration: 0.2), value: currentPage.isList)
         }
         .frame(width: 420, height: 520)
+        .background(ColoredGlassBackground())
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Color.white.opacity(0.72), lineWidth: 1)
+        )
+        .preferredColorScheme(.light)
     }
 
     private var headerBar: some View {
@@ -90,7 +97,7 @@ struct MainPanelView: View {
                 .foregroundStyle(.primary.opacity(0.8))
             Spacer()
             Button {
-                NSApp.keyWindow?.close()
+                onRequestClose()
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 14))
@@ -142,7 +149,8 @@ struct MainPanelView: View {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     currentPage = .edit(prompt)
                                 }
-                            }
+                            },
+                            onCopyComplete: onRequestClose
                         )
                     }
                 }
@@ -204,5 +212,79 @@ struct MainPanelView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+}
+
+/// 不依赖窗口后方内容的实色玻璃底板。
+/// 多层柔和渐变和细小高光颗粒让它保留“玻璃照片”的质感，但完全不透明。
+private struct ColoredGlassBackground: View {
+    var body: some View {
+        ZStack {
+            Color(red: 0.93, green: 0.94, blue: 0.96)
+
+            LinearGradient(
+                colors: [
+                    Color(red: 0.97, green: 0.97, blue: 0.98),
+                    Color(red: 0.90, green: 0.93, blue: 0.97),
+                    Color(red: 0.95, green: 0.91, blue: 0.94),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            RadialGradient(
+                colors: [
+                    Color(red: 0.80, green: 0.90, blue: 1.0).opacity(0.44),
+                    .clear,
+                ],
+                center: UnitPoint(x: 0.08, y: 0.04),
+                startRadius: 0,
+                endRadius: 300
+            )
+
+            RadialGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.82, blue: 0.90).opacity(0.28),
+                    .clear,
+                ],
+                center: UnitPoint(x: 0.92, y: 0.88),
+                startRadius: 0,
+                endRadius: 270
+            )
+
+            Canvas { context, size in
+                for index in 0..<96 {
+                    let x = CGFloat((index * 47) % 101) / 100 * size.width
+                    let y = CGFloat((index * 71) % 103) / 102 * size.height
+                    let diameter = CGFloat(1 + (index % 3)) * 0.55
+                    let speck = CGRect(
+                        x: x,
+                        y: y,
+                        width: diameter,
+                        height: diameter
+                    )
+                    context.fill(
+                        Path(ellipseIn: speck),
+                        with: .color(.white.opacity(index.isMultiple(of: 4) ? 0.28 : 0.12))
+                    )
+                }
+            }
+            .blendMode(.softLight)
+
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.38),
+                    Color.white.opacity(0.05),
+                    Color.white.opacity(0.18),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.white.opacity(0.34))
+                .frame(height: 1)
+        }
     }
 }
