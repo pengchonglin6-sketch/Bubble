@@ -13,7 +13,7 @@ struct PromptFormView: View {
     @State private var showDeleteConfirm = false
     @State private var saveErrorMessage: String? = nil
 
-    private let maxContentLength = 2000
+    private let maxContentLength = 5000
 
     private let presetTags: [(String, String)] = [
         ("写作", "#4A90D9"),
@@ -107,15 +107,17 @@ struct PromptFormView: View {
                                             .background(
                                                 Capsule().fill(
                                                     selectedTag == tag
-                                                        ? Color(hex: color).opacity(0.2)
-                                                        : Color(hex: color).opacity(0.08)
+                                                        ? Color(hex: color).opacity(0.30)
+                                                        : Color(hex: color).opacity(0.14)
                                                 )
                                             )
-                                            .foregroundStyle(
-                                                selectedTag == tag
-                                                    ? Color(hex: color)
-                                                    : .secondary
+                                            .overlay(
+                                                Capsule().strokeBorder(
+                                                    Color(hex: color).opacity(selectedTag == tag ? 0.62 : 0.24),
+                                                    lineWidth: 1
+                                                )
                                             )
+                                            .foregroundStyle(Color.primary.opacity(selectedTag == tag ? 0.82 : 0.68))
                                     }
                                     .buttonStyle(.plain)
                                 }

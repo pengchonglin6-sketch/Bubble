@@ -36,18 +36,22 @@ private struct TagCapsule: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 5)
                 .background(
                     Capsule()
-                        .fill(isSelected ? color.opacity(0.2) : color.opacity(0.08))
+                        .fill(isSelected ? color.opacity(0.30) : color.opacity(0.14))
                 )
-                .foregroundStyle(isSelected ? color : .secondary)
+                .foregroundStyle(Color.primary.opacity(isSelected ? 0.84 : 0.70))
                 .overlay(
                     Capsule()
-                        .strokeBorder(isSelected ? color.opacity(0.4) : .clear, lineWidth: 1)
+                        .strokeBorder(
+                            isSelected ? color.opacity(0.68) : color.opacity(0.28),
+                            lineWidth: 1
+                        )
                 )
+                .shadow(color: isSelected ? color.opacity(0.12) : .clear, radius: 3, y: 1)
         }
         .buttonStyle(.plain)
     }

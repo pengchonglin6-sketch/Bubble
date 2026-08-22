@@ -20,7 +20,7 @@ final class FloatingPanel: NSPanel {
         backgroundColor = .clear
         hasShadow = true
         hidesOnDeactivate = false
-        isMovableByWindowBackground = false
+        isMovable = true
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
         animationBehavior = .utilityWindow
@@ -40,10 +40,48 @@ final class FloatingPanel: NSPanel {
     }
 }
 
+/// 覆盖在面板标题区域上的透明拖动层。
+/// 只占用标题左侧，保留右上角关闭按钮的点击区域，也不会抢占卡片拖拽手势。
+private final class PanelDragRegionView: NSView {
+    var adjustedOrigin: ((NSPoint, NSSize) -> NSPoint)?
+    var onDragEnded: (() -> Void)?
+    private var dragStartMouseLocation: NSPoint?
+    private var dragStartWindowOrigin: NSPoint?
+
+    override var mouseDownCanMoveWindow: Bool { false }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func mouseDown(with event: NSEvent) {
+        dragStartMouseLocation = NSEvent.mouseLocation
+        dragStartWindowOrigin = window?.frame.origin
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let window,
+              let dragStartMouseLocation,
+              let dragStartWindowOrigin else { return }
+
+        let mouseLocation = NSEvent.mouseLocation
+        let proposedOrigin = NSPoint(
+            x: dragStartWindowOrigin.x + mouseLocation.x - dragStartMouseLocation.x,
+            y: dragStartWindowOrigin.y + mouseLocation.y - dragStartMouseLocation.y
+        )
+        let origin = adjustedOrigin?(proposedOrigin, window.frame.size) ?? proposedOrigin
+        window.setFrameOrigin(origin)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragStartMouseLocation = nil
+        dragStartWindowOrigin = nil
+        onDragEnded?()
+    }
+}
+
 final class PanelController {
     private let panel: FloatingPanel
     private let hostingView: NSHostingView<AnyView>
     private var clickMonitor: Any?
+    private var hasPositionedPanel = false
 
     static let panelWidth: CGFloat = 420
     static let panelHeight: CGFloat = 520
@@ -71,23 +109,40 @@ final class PanelController {
             hostingView.leadingAnchor.constraint(equalTo: panel.contentView!.leadingAnchor),
             hostingView.trailingAnchor.constraint(equalTo: panel.contentView!.trailingAnchor),
         ])
+
+        // SwiftUI 卡片本身需要接收拖拽事件来排序，所以窗口移动只放在标题区域。
+        let dragRegion = PanelDragRegionView()
+        dragRegion.adjustedOrigin = { [weak self] proposedOrigin, panelSize in
+            self?.magnetizedOrigin(
+                from: proposedOrigin,
+                panelSize: panelSize,
+                snapDistance: 18
+            ) ?? proposedOrigin
+        }
+        dragRegion.onDragEnded = { [weak self] in
+            self?.snapPanelToNearestScreenEdge()
+        }
+        dragRegion.translatesAutoresizingMaskIntoConstraints = false
+        panel.contentView?.addSubview(dragRegion, positioned: .above, relativeTo: hostingView)
+        NSLayoutConstraint.activate([
+            dragRegion.topAnchor.constraint(equalTo: panel.contentView!.topAnchor),
+            dragRegion.leadingAnchor.constraint(equalTo: panel.contentView!.leadingAnchor),
+            dragRegion.trailingAnchor.constraint(equalTo: panel.contentView!.trailingAnchor, constant: -48),
+            dragRegion.heightAnchor.constraint(equalToConstant: 46),
+        ])
     }
 
     func show(relativeTo statusItemFrame: NSRect) {
-        let screenFrame = NSScreen.main?.visibleFrame ?? .zero
-
-        var panelX = statusItemFrame.midX - Self.panelWidth / 2
-        var panelY = statusItemFrame.minY - Self.panelHeight - 4
-
-        if statusItemFrame == .zero {
-            panelX = screenFrame.midX - Self.panelWidth / 2
-            panelY = screenFrame.maxY - Self.panelHeight - 40
+        if !hasPositionedPanel {
+            let screen = screenContaining(statusItemFrame) ?? NSScreen.main ?? NSScreen.screens.first
+            let screenFrame = screen?.visibleFrame ?? .zero
+            let origin = NSPoint(
+                x: screenFrame.maxX - Self.panelWidth - 16,
+                y: screenFrame.maxY - Self.panelHeight - 12
+            )
+            panel.setFrameOrigin(origin)
+            hasPositionedPanel = true
         }
-
-        panelX = max(screenFrame.minX + 8, min(panelX, screenFrame.maxX - Self.panelWidth - 8))
-
-        let origin = NSPoint(x: panelX, y: panelY)
-        panel.setFrameOrigin(origin)
         panel.alphaValue = 0
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -99,6 +154,61 @@ final class PanelController {
         }
 
         startClickMonitor()
+    }
+
+    private func screenContaining(_ frame: NSRect) -> NSScreen? {
+        guard frame != .zero else { return nil }
+        return NSScreen.screens.first { $0.frame.intersects(frame) }
+    }
+
+    /// 松手后再以稍宽的范围补一次吸附。
+    /// 顶部使用 visibleFrame.maxY，边界正是菜单栏下方那条线。
+    private func snapPanelToNearestScreenEdge() {
+        let currentFrame = panel.frame
+        // 28pt 足以让吸附被感知，但不会在离边缘较远时主动拉走窗口。
+        let targetOrigin = magnetizedOrigin(
+            from: currentFrame.origin,
+            panelSize: currentFrame.size,
+            snapDistance: 28
+        )
+
+        guard targetOrigin != currentFrame.origin else { return }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.14
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().setFrameOrigin(targetOrigin)
+        }
+    }
+
+    /// 拖动中使用 18pt 的轻磁力，松手时使用 28pt 收尾。
+    /// visibleFrame 已排除菜单栏与 Dock，所以顶部永远不会盖住菜单栏。
+    private func magnetizedOrigin(
+        from proposedOrigin: NSPoint,
+        panelSize: NSSize,
+        snapDistance: CGFloat
+    ) -> NSPoint {
+        let proposedFrame = NSRect(origin: proposedOrigin, size: panelSize)
+        let mouseLocation = NSEvent.mouseLocation
+        let targetScreen = NSScreen.screens.first { $0.frame.contains(mouseLocation) }
+            ?? NSScreen.screens.max { first, second in
+                first.visibleFrame.intersection(proposedFrame).area
+                    < second.visibleFrame.intersection(proposedFrame).area
+            }
+        guard let visibleFrame = targetScreen?.visibleFrame else { return proposedOrigin }
+
+        var origin = proposedOrigin
+        if abs(proposedFrame.minX - visibleFrame.minX) <= snapDistance {
+            origin.x = visibleFrame.minX
+        } else if abs(proposedFrame.maxX - visibleFrame.maxX) <= snapDistance {
+            origin.x = visibleFrame.maxX - panelSize.width
+        }
+
+        if abs(proposedFrame.minY - visibleFrame.minY) <= snapDistance {
+            origin.y = visibleFrame.minY
+        } else if abs(proposedFrame.maxY - visibleFrame.maxY) <= snapDistance {
+            origin.y = visibleFrame.maxY - panelSize.height
+        }
+        return origin
     }
 
     func close() {
@@ -125,5 +235,12 @@ final class PanelController {
             NSEvent.removeMonitor(clickMonitor)
             self.clickMonitor = nil
         }
+    }
+}
+
+private extension NSRect {
+    var area: CGFloat {
+        guard !isNull, !isEmpty else { return 0 }
+        return width * height
     }
 }

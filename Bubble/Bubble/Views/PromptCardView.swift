@@ -28,11 +28,15 @@ struct PromptCardView: View {
                         .lineLimit(1)
                     if !prompt.tag.isEmpty {
                         Text(prompt.tag)
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 10, weight: .semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color(hex: prompt.tagColor).opacity(0.15), in: Capsule())
-                            .foregroundStyle(Color(hex: prompt.tagColor))
+                            .background(Color(hex: prompt.tagColor).opacity(0.26), in: Capsule())
+                            .overlay(
+                                Capsule()
+                                    .strokeBorder(Color(hex: prompt.tagColor).opacity(0.40), lineWidth: 1)
+                            )
+                            .foregroundStyle(Color.primary.opacity(0.76))
                     }
                 }
 
