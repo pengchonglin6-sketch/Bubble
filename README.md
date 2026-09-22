@@ -31,6 +31,7 @@ Bubble 是一款 macOS 菜单栏应用。点击状态栏图标或按下全局快
 | 磨砂玻璃 UI | 原生 `NSVisualEffectView`，与 macOS 系统风格一致 |
 | 搜索 + 标签筛选 | 同时搜索标题与内容，支持自定义分类标签 |
 | 一键复制 | 复制后可立即在其他应用粘贴 |
+| 内置提示词库 | 首次启动自带 13 条提示词，包含学习、提问、决策、解决问题等分类，可自由编辑与删除 |
 | 本地数据存储 | 基于 SwiftData，数据只在本机，不联网 |
 | 开机自启动 | 使用 `SMAppService`，系统级原生支持 |
 
@@ -113,7 +114,11 @@ open Bubble/Bubble.xcodeproj
 
 ## 数据存储
 
-所有提示词数据**只保存在本地**，使用 SwiftData（Apple 原生 ORM）。
+应用内置 13 条提示词，完整内容、标签、颜色和默认顺序随源码及安装包一起分发。首次启动自动导入，无需联网；从旧版升级也会一次性补入缺少的条目（标题和内容均相同时跳过），保留已有提示词和排序。导入完成后，自行编辑或删除的提示词不会在重启时恢复。
+
+内置内容维护在 [`DefaultPrompts.json`](Bubble/Bubble/Resources/DefaultPrompts.json)。这是发布时的内容快照；作者在自己电脑上的后续编辑不会自动同步到下载者。
+
+运行时的提示词数据**只保存在本地**，使用 SwiftData（Apple 原生 ORM）。
 
 数据库位置：`~/Library/Application Support/Bubble/`，可手动备份。
 
